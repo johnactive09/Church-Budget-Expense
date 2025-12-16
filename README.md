@@ -32,6 +32,10 @@ Then open: `http://localhost:8000`
 ## Notes / Limitations
 - This is a demo app; passwords are stored in the code (not secure).
 - Data is per-browser/device (no cloud sync).
+- 
+## AI Assistance Disclosure
+This project was created with the assistance of AI tools (including Canva AI and ChatGPT) and was reviewed, modified, and validated by the author.
+All design decisions, configuration choices, and final implementation responsibility belong to the author.
 
 ## License
 MIT (or choose your own)
