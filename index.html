@@ -1,2076 +1,407 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NLOC BUDGET/EXPENSE</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        .fade-in { animation: fadeIn 0.3s ease-in; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .card-hover { transition: all 0.3s ease; }
-        .card-hover:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-        .tree-item { margin-left: 20px; }
-        .expense-row { border-bottom: 1px solid #e5e7eb; padding: 8px 0; }
-        .scroll-container { max-height: 400px; overflow-y: auto; }
-        .budget-tree { max-height: 500px; overflow-y: auto; }
-        @media print {
-            .no-print { display: none !important; }
-            body { font-size: 12px; }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NLOC BUDGET/EXPENSE</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .fade-in { animation: fadeIn 0.3s ease-in; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .card-hover { transition: all 0.3s ease; }
+    .card-hover:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+    .tree-item { margin-left: 20px; }
+    .expense-row { border-bottom: 1px solid #e5e7eb; padding: 8px 0; }
+    .scroll-container { max-height: 400px; overflow-y: auto; }
+    .budget-tree { max-height: 500px; overflow-y: auto; }
+    @media print {
+      .no-print { display: none !important; }
+      body { font-size: 12px; }
+    }
+  </style>
 </head>
+
 <body class="bg-gray-50 font-sans">
-    <!-- 로그인 화면 -->
-    <div id="loginScreen" class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-900 to-blue-700">
-        <div class="bg-white p-8 rounded-lg shadow-2xl w-96">
-            <div class="text-center mb-6">
-                <h1 class="text-xl font-bold text-gray-800 mb-2">NLOC BUDGET/EXPENSE</h1>
-                <h2 class="text-lg text-gray-600">교회 회계 시스템</h2>
-            </div>
-            <form onsubmit="handleLogin(event)">
-                <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2">사용자 ID</label>
-                    <input type="text" id="loginUsername" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500" required>
-                </div>
-                <div class="mb-6">
-                    <label class="block text-gray-700 text-sm font-bold mb-2">비밀번호</label>
-                    <input type="password" id="loginPassword" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500" required>
-                </div>
-                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors text-sm">
-                    로그인
-                </button>
-            </form>
-            <div class="mt-4 text-sm text-gray-600 text-center">
-                <p>데모 계정:</p>
-                <p>관리자: admin / admin123</p>
-                <p>팀 사용자: 100 / team123</p>
-                <div class="mt-4 pt-4 border-t">
-                    <button onclick="exportSystemData()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm mr-2">
-                        시스템 데이터 내보내기
-                    </button>
-                    <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importSystemData(event)">
-                    <button onclick="document.getElementById('importFile').click()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm">
-                        시스템 데이터 가져오기
-                    </button>
-                </div>
-            </div>
+
+  <!-- 로그인 화면 -->
+  <div id="loginScreen" class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-900 to-blue-700">
+    <div class="bg-white p-8 rounded-lg shadow-2xl w-96">
+      <div class="text-center mb-6">
+        <h1 class="text-xl font-bold text-gray-800 mb-2">NLOC BUDGET/EXPENSE</h1>
+        <h2 class="text-lg text-gray-600">교회 회계 시스템</h2>
+      </div>
+
+      <form id="loginForm">
+        <div class="mb-4">
+          <label class="block text-gray-700 text-sm font-bold mb-2">사용자 ID</label>
+          <input type="text" id="loginUsername" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500" required />
         </div>
+        <div class="mb-6">
+          <label class="block text-gray-700 text-sm font-bold mb-2">비밀번호</label>
+          <input type="password" id="loginPassword" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500" required />
+        </div>
+        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors text-sm">
+          로그인
+        </button>
+      </form>
+
+      <div class="mt-4 text-sm text-gray-600 text-center">
+        <p>데모 계정:</p>
+        <p>관리자: admin / admin123</p>
+        <p>팀 사용자: 100 / team123</p>
+
+        <div class="mt-4 pt-4 border-t">
+          <button id="exportSystemBtn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm mr-2">
+            시스템 데이터 내보내기
+          </button>
+
+          <input type="file" id="importFile" accept=".json" style="display:none;" />
+          <button id="importSystemBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm">
+            시스템 데이터 가져오기
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 메인 애플리케이션 -->
+  <div id="mainApp" class="hidden">
+
+    <!-- 네비게이션 -->
+    <nav class="bg-blue-900 text-white p-4 shadow-lg no-print">
+      <div class="container mx-auto flex justify-between items-center">
+        <h1 class="text-2xl font-bold">NLOC BUDGET/EXPENSE</h1>
+        <div class="flex items-center space-x-4">
+          <span id="currentUser" class="text-blue-200">환영합니다</span>
+          <button id="navDashboardBtn" class="bg-blue-700 hover:bg-blue-800 px-4 py-2 rounded transition-colors">
+            대시보드
+          </button>
+          <button id="navSettingsBtn" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded transition-colors">
+            설정
+          </button>
+          <button id="navLogoutBtn" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded transition-colors">
+            로그아웃
+          </button>
+        </div>
+      </div>
+    </nav>
+
+    <!-- 대시보드 -->
+    <div id="dashboard" class="section p-8">
+      <h2 class="text-3xl font-bold mb-8 text-gray-800">대시보드</h2>
+
+      <!-- 요약 카드 -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white p-6 rounded-lg shadow-md card-hover">
+          <h3 class="text-lg font-bold text-gray-700 mb-2">총 예산</h3>
+          <p class="text-3xl font-bold text-blue-600" id="totalBudget">$0.00</p>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow-md card-hover">
+          <h3 class="text-lg font-bold text-gray-700 mb-2">총 지출</h3>
+          <p class="text-3xl font-bold text-red-600" id="totalExpenses">$0.00</p>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow-md card-hover">
+          <h3 class="text-lg font-bold text-gray-700 mb-2">잔액</h3>
+          <p class="text-3xl font-bold text-green-600" id="totalBalance">$0.00</p>
+        </div>
+      </div>
+
+      <!-- 팀별 상세 (일반 사용자용) -->
+      <div id="teamBudgetDetail" class="bg-white p-6 rounded-lg shadow-md mb-8 hidden">
+        <h3 class="text-xl font-bold mb-4">상세 예산 현황</h3>
+        <div class="budget-tree"><div id="budgetTreeContent"></div></div>
+      </div>
+
+      <!-- 전체 상세 (관리자용) -->
+      <div id="adminBudgetDetail" class="bg-white p-6 rounded-lg shadow-md mb-8 hidden">
+        <h3 class="text-xl font-bold mb-4">전체 예산 현황</h3>
+        <div class="budget-tree"><div id="adminBudgetTreeContent"></div></div>
+      </div>
+
+      <!-- 지출 입력 -->
+      <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+        <h3 class="text-xl font-bold mb-4">지출 입력</h3>
+        <form id="expenseForm">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">팀 선택</label>
+              <select id="teamSelect" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                <option value="">팀을 선택하세요</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">부서 선택</label>
+              <select id="departmentSelect" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                <option value="">부서를 선택하세요</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">항목 선택</label>
+              <select id="itemSelect" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                <option value="">항목을 선택하세요</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- 지출 항목 -->
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">지출 내역</label>
+            <div id="expenseItems" class="space-y-2"></div>
+            <button type="button" id="addExpenseItemBtn" class="mt-2 bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded text-sm">
+              항목 추가
+            </button>
+          </div>
+
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">총 금액</label>
+            <input type="text" id="totalAmount" class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100" readonly />
+          </div>
+
+          <div class="flex space-x-4">
+            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors">
+              저장
+            </button>
+            <button type="button" id="cancelExpenseBtn" class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg transition-colors">
+              취소
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- 지출 내역 -->
+      <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-xl font-bold">지출 내역</h3>
+          <div class="space-x-2">
+            <button id="exportExcelBtn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm">Excel 내보내기</button>
+            <button id="printExpensesBtn" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded text-sm">인쇄</button>
+            <button id="checkBudgetBtn" class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded text-sm">예산 검증</button>
+          </div>
+        </div>
+
+        <div class="scroll-container">
+          <table class="min-w-full">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">날짜</th>
+                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">팀</th>
+                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">부서</th>
+                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">항목</th>
+                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">내용</th>
+                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">금액</th>
+                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase no-print">작업</th>
+              </tr>
+            </thead>
+            <tbody id="expenseTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="text-center no-print">
+        <button id="logoutBigBtn" class="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-lg text-lg">
+          로그아웃 (자동 백업)
+        </button>
+      </div>
     </div>
 
-    <!-- 메인 애플리케이션 -->
-    <div id="mainApp" class="hidden">
-        <!-- 네비게이션 -->
-        <nav class="bg-blue-900 text-white p-4 shadow-lg no-print">
-            <div class="container mx-auto flex justify-between items-center">
-                <h1 class="text-2xl font-bold">NLOC BUDGET/EXPENSE</h1>
-                <div class="flex items-center space-x-4">
-                    <span id="currentUser" class="text-blue-200">환영합니다</span>
-                    <button onclick="showSection('dashboard')" class="bg-blue-700 hover:bg-blue-800 px-4 py-2 rounded transition-colors">
-                        대시보드
-                    </button>
-                    <button onclick="showSection('settings')" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded transition-colors" id="settingsBtn">
-                        설정
-                    </button>
-                    <button onclick="logout()" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded transition-colors">
-                        로그아웃
-                    </button>
-                </div>
+    <!-- 설정 -->
+    <div id="settings" class="section hidden p-8">
+      <h2 class="text-3xl font-bold mb-8 text-gray-800">설정</h2>
+
+      <div class="mb-6">
+        <div class="border-b border-gray-200">
+          <nav class="-mb-px flex space-x-8">
+            <button data-tab="teams" class="settings-tab py-2 px-1 border-b-2 border-blue-500 font-medium text-sm text-blue-600">팀 관리</button>
+            <button data-tab="departments" class="settings-tab py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700">부서 관리</button>
+            <button data-tab="items" class="settings-tab py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700">항목 관리</button>
+            <button data-tab="budgets" class="settings-tab py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700">예산 관리</button>
+            <button data-tab="users" class="settings-tab py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700">사용자 관리</button>
+            <button data-tab="backup" class="settings-tab py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700">백업 관리</button>
+          </nav>
+        </div>
+      </div>
+
+      <!-- 팀 탭 -->
+      <div id="teamsTab" class="settings-content">
+        <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+          <h3 class="text-xl font-bold mb-4">새 팀 추가</h3>
+          <form id="addTeamForm">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">팀 코드</label>
+                <input type="text" id="teamCode" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="T001" required />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">팀 이름</label>
+                <input type="text" id="teamName" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="예배팀" required />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">팀장</label>
+                <input type="text" id="teamLeader" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="김팀장" required />
+              </div>
             </div>
-        </nav>
-
-        <!-- 대시보드 섹션 -->
-        <div id="dashboard" class="section p-8">
-            <h2 class="text-3xl font-bold mb-8 text-gray-800">대시보드</h2>
-            
-            <!-- 예산 현황 카드 -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div class="bg-white p-6 rounded-lg shadow-md card-hover">
-                    <h3 class="text-lg font-bold text-gray-700 mb-2">총 예산</h3>
-                    <p class="text-3xl font-bold text-blue-600" id="totalBudget">$0.00</p>
-                </div>
-                <div class="bg-white p-6 rounded-lg shadow-md card-hover">
-                    <h3 class="text-lg font-bold text-gray-700 mb-2">총 지출</h3>
-                    <p class="text-3xl font-bold text-red-600" id="totalExpenses">$0.00</p>
-                </div>
-                <div class="bg-white p-6 rounded-lg shadow-md card-hover">
-                    <h3 class="text-lg font-bold text-gray-700 mb-2">잔액</h3>
-                    <p class="text-3xl font-bold text-green-600" id="totalBalance">$0.00</p>
-                </div>
-            </div>
-
-            <!-- 팀별 상세 예산 현황 (일반 사용자용) -->
-            <div id="teamBudgetDetail" class="bg-white p-6 rounded-lg shadow-md mb-8 hidden">
-                <h3 class="text-xl font-bold mb-4">상세 예산 현황</h3>
-                <div class="budget-tree">
-                    <div id="budgetTreeContent"></div>
-                </div>
-            </div>
-
-            <!-- 전체 예산 현황 (관리자용) -->
-            <div id="adminBudgetDetail" class="bg-white p-6 rounded-lg shadow-md mb-8 hidden">
-                <h3 class="text-xl font-bold mb-4">전체 예산 현황</h3>
-                <div class="budget-tree">
-                    <div id="adminBudgetTreeContent"></div>
-                </div>
-            </div>
-
-            <!-- 지출 입력 폼 -->
-            <div class="bg-white p-6 rounded-lg shadow-md mb-8">
-                <h3 class="text-xl font-bold mb-4">지출 입력</h3>
-                <form onsubmit="addExpense(event)">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">팀 선택</label>
-                            <select id="teamSelect" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" onchange="updateDepartmentSelect()" required>
-                                <option value="">팀을 선택하세요</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">부서 선택</label>
-                            <select id="departmentSelect" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" onchange="updateItemSelect()" required>
-                                <option value="">부서를 선택하세요</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">항목 선택</label>
-                            <select id="itemSelect" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                                <option value="">항목을 선택하세요</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- 지출 항목들 (최대 5개) -->
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">지출 내역</label>
-                        <div id="expenseItems" class="space-y-2">
-                            <!-- 지출 항목들이 여기에 동적으로 추가됩니다 -->
-                        </div>
-                        <button type="button" onclick="addExpenseItem()" class="mt-2 bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded text-sm">
-                            항목 추가
-                        </button>
-                    </div>
-
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">총 금액</label>
-                        <input type="text" id="totalAmount" class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100" readonly>
-                    </div>
-
-                    <div class="flex space-x-4">
-                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors">
-                            저장
-                        </button>
-                        <button type="button" onclick="cancelExpense()" class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg transition-colors">
-                            취소
-                        </button>
-                    </div>
-                </form>
-            </div>
-
-            <!-- 지출 내역 -->
-            <div class="bg-white p-6 rounded-lg shadow-md mb-8">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-xl font-bold">지출 내역</h3>
-                    <div class="space-x-2">
-                        <button onclick="exportToExcel()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm">
-                            Excel 내보내기
-                        </button>
-                        <button onclick="printExpenses()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded text-sm">
-                            인쇄
-                        </button>
-                        <button onclick="checkBudgetBalance()" class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded text-sm">
-                            예산 검증
-                        </button>
-                    </div>
-                </div>
-                <div class="scroll-container">
-                    <table class="min-w-full">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">날짜</th>
-                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">팀</th>
-                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">부서</th>
-                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">항목</th>
-                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">내용</th>
-                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">금액</th>
-                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase no-print">작업</th>
-                            </tr>
-                        </thead>
-                        <tbody id="expenseTableBody">
-                            <!-- 지출 내역이 여기에 표시됩니다 -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- 로그아웃 버튼 -->
-            <div class="text-center no-print">
-                <button onclick="logout()" class="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-lg text-lg">
-                    로그아웃 (자동 백업)
-                </button>
-            </div>
+            <button type="submit" class="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">팀 추가</button>
+          </form>
         </div>
 
-        <!-- 설정 섹션 -->
-        <div id="settings" class="section hidden p-8">
-            <h2 class="text-3xl font-bold mb-8 text-gray-800">설정</h2>
-            
-            <!-- 탭 메뉴 -->
-            <div class="mb-6">
-                <div class="border-b border-gray-200">
-                    <nav class="-mb-px flex space-x-8">
-                        <button onclick="showSettingsTab('teams')" class="settings-tab py-2 px-1 border-b-2 border-blue-500 font-medium text-sm text-blue-600">
-                            팀 관리
-                        </button>
-                        <button onclick="showSettingsTab('departments')" class="settings-tab py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700">
-                            부서 관리
-                        </button>
-                        <button onclick="showSettingsTab('items')" class="settings-tab py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700">
-                            항목 관리
-                        </button>
-                        <button onclick="showSettingsTab('budgets')" class="settings-tab py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700">
-                            예산 관리
-                        </button>
-                        <button onclick="showSettingsTab('users')" class="settings-tab py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700">
-                            사용자 관리
-                        </button>
-                        <button onclick="showSettingsTab('backup')" class="settings-tab py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700">
-                            백업 관리
-                        </button>
-                    </nav>
-                </div>
-            </div>
-
-            <!-- 팀 관리 탭 -->
-            <div id="teamsTab" class="settings-content">
-                <div class="bg-white p-6 rounded-lg shadow-md mb-6">
-                    <h3 class="text-xl font-bold mb-4">새 팀 추가</h3>
-                    <form onsubmit="addTeam(event)">
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">팀 코드</label>
-                                <input type="text" id="teamCode" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="T001" required>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">팀 이름</label>
-                                <input type="text" id="teamName" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="예배팀" required>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">팀장</label>
-                                <input type="text" id="teamLeader" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="김팀장" required>
-                            </div>
-                        </div>
-                        <button type="submit" class="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
-                            팀 추가
-                        </button>
-                    </form>
-                </div>
-                <div class="bg-white p-6 rounded-lg shadow-md">
-                    <h3 class="text-xl font-bold mb-4">팀 목록</h3>
-                    <div class="scroll-container">
-                        <div id="teamsList"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 부서 관리 탭 -->
-            <div id="departmentsTab" class="settings-content hidden">
-                <div class="bg-white p-6 rounded-lg shadow-md mb-6">
-                    <h3 class="text-xl font-bold mb-4">새 부서 추가</h3>
-                    <form onsubmit="addDepartment(event)">
-                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">소속 팀</label>
-                                <select id="deptTeamSelect" class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
-                                    <option value="">팀 선택</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">부서 코드</label>
-                                <input type="text" id="deptCode" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="D001" required>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">부서 이름</label>
-                                <input type="text" id="deptName" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="음향부서" required>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">부서장</label>
-                                <input type="text" id="deptLeader" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="이부장" required>
-                            </div>
-                        </div>
-                        <button type="submit" class="mt-4 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
-                            부서 추가
-                        </button>
-                    </form>
-                </div>
-                <div class="bg-white p-6 rounded-lg shadow-md">
-                    <h3 class="text-xl font-bold mb-4">부서 목록</h3>
-                    <div class="scroll-container">
-                        <div id="departmentsList"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 항목 관리 탭 -->
-            <div id="itemsTab" class="settings-content hidden">
-                <div class="bg-white p-6 rounded-lg shadow-md mb-6">
-                    <h3 class="text-xl font-bold mb-4">새 항목 추가</h3>
-                    <form onsubmit="addItem(event)">
-                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">소속 부서</label>
-                                <select id="itemDeptSelect" class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
-                                    <option value="">부서 선택</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">항목 코드</label>
-                                <input type="text" id="itemCode" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="I001" required>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">항목 이름</label>
-                                <input type="text" id="itemName" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="장비구입" required>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">예산</label>
-                                <input type="number" step="0.01" id="itemBudget" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="1000.00" required>
-                            </div>
-                        </div>
-                        <button type="submit" class="mt-4 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded">
-                            항목 추가
-                        </button>
-                    </form>
-                </div>
-                <div class="bg-white p-6 rounded-lg shadow-md">
-                    <h3 class="text-xl font-bold mb-4">항목 목록</h3>
-                    <div class="scroll-container">
-                        <div id="itemsList"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 예산 관리 탭 -->
-            <div id="budgetsTab" class="settings-content hidden">
-                <div class="bg-white p-6 rounded-lg shadow-md">
-                    <h3 class="text-xl font-bold mb-4">예산 현황</h3>
-                    <div class="scroll-container">
-                        <div id="budgetsList"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 사용자 관리 탭 -->
-            <div id="usersTab" class="settings-content hidden">
-                <div class="bg-white p-6 rounded-lg shadow-md">
-                    <h3 class="text-xl font-bold mb-4">사용자 관리</h3>
-                    <div class="scroll-container">
-                        <div id="usersList"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 백업 관리 탭 -->
-            <div id="backupTab" class="settings-content hidden">
-                <div class="bg-white p-6 rounded-lg shadow-md">
-                    <h3 class="text-xl font-bold mb-4">백업 관리</h3>
-                    <div class="mb-4">
-                        <button onclick="createBackup()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded mr-2">
-                            수동 백업 생성
-                        </button>
-                    </div>
-                    <div class="scroll-container">
-                        <div id="backupsList"></div>
-                    </div>
-                </div>
-            </div>
+        <div class="bg-white p-6 rounded-lg shadow-md">
+          <h3 class="text-xl font-bold mb-4">팀 목록</h3>
+          <div class="scroll-container"><div id="teamsList"></div></div>
         </div>
+      </div>
+
+      <!-- 부서 탭 -->
+      <div id="departmentsTab" class="settings-content hidden">
+        <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+          <h3 class="text-xl font-bold mb-4">새 부서 추가</h3>
+          <form id="addDepartmentForm">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">소속 팀</label>
+                <select id="deptTeamSelect" class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
+                  <option value="">팀 선택</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">부서 코드</label>
+                <input type="text" id="deptCode" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="D001" required />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">부서 이름</label>
+                <input type="text" id="deptName" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="음향부서" required />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">부서장</label>
+                <input type="text" id="deptLeader" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="이부장" required />
+              </div>
+            </div>
+            <button type="submit" class="mt-4 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">부서 추가</button>
+          </form>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow-md">
+          <h3 class="text-xl font-bold mb-4">부서 목록</h3>
+          <div class="scroll-container"><div id="departmentsList"></div></div>
+        </div>
+      </div>
+
+      <!-- 항목 탭 -->
+      <div id="itemsTab" class="settings-content hidden">
+        <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+          <h3 class="text-xl font-bold mb-4">새 항목 추가</h3>
+          <form id="addItemForm">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">소속 부서</label>
+                <select id="itemDeptSelect" class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
+                  <option value="">부서 선택</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">항목 코드</label>
+                <input type="text" id="itemCode" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="I001" required />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">항목 이름</label>
+                <input type="text" id="itemName" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="장비구입" required />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">예산</label>
+                <input type="number" step="0.01" id="itemBudget" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="1000.00" required />
+              </div>
+            </div>
+            <button type="submit" class="mt-4 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded">항목 추가</button>
+          </form>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow-md">
+          <h3 class="text-xl font-bold mb-4">항목 목록</h3>
+          <div class="scroll-container"><div id="itemsList"></div></div>
+        </div>
+      </div>
+
+      <!-- 예산 탭 -->
+      <div id="budgetsTab" class="settings-content hidden">
+        <div class="bg-white p-6 rounded-lg shadow-md">
+          <h3 class="text-xl font-bold mb-4">예산 현황</h3>
+          <div class="scroll-container"><div id="budgetsList"></div></div>
+        </div>
+      </div>
+
+      <!-- 사용자 탭 -->
+      <div id="usersTab" class="settings-content hidden">
+        <div class="bg-white p-6 rounded-lg shadow-md">
+          <h3 class="text-xl font-bold mb-4">사용자 관리</h3>
+          <div class="scroll-container"><div id="usersList"></div></div>
+        </div>
+      </div>
+
+      <!-- 백업 탭 -->
+      <div id="backupTab" class="settings-content hidden">
+        <div class="bg-white p-6 rounded-lg shadow-md">
+          <h3 class="text-xl font-bold mb-4">백업 관리</h3>
+          <div class="mb-4">
+            <button id="createBackupBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded mr-2">
+              수동 백업 생성
+            </button>
+          </div>
+          <div class="scroll-container"><div id="backupsList"></div></div>
+        </div>
+      </div>
     </div>
+  </div>
 
-    <!-- 지출청구서 모달 -->
-    <div id="expenseFormModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50">
-        <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-4xl max-h-screen overflow-y-auto">
-            <div class="flex justify-between items-center mb-6 no-print">
-                <h3 class="text-2xl font-bold">지출 청구서</h3>
-                <div class="space-x-2">
-                    <button onclick="printExpenseForm()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
-                        인쇄
-                    </button>
-                    <button onclick="closeExpenseForm()" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded">
-                        닫기
-                    </button>
-                </div>
-            </div>
-            <div id="expenseFormContent">
-                <!-- 지출청구서 내용이 여기에 표시됩니다 -->
-            </div>
+  <!-- 지출청구서 모달 -->
+  <div id="expenseFormModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-4xl max-h-screen overflow-y-auto">
+      <div class="flex justify-between items-center mb-6 no-print">
+        <h3 class="text-2xl font-bold">지출 청구서</h3>
+        <div class="space-x-2">
+          <button id="printExpenseFormBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">인쇄</button>
+          <button id="closeExpenseFormBtn" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded">닫기</button>
         </div>
+      </div>
+      <div id="expenseFormContent"></div>
     </div>
+  </div>
 
-    <!-- 편집 모달 -->
-    <div id="editModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50">
-        <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
-            <div class="flex justify-between items-center mb-6">
-                <h3 id="editModalTitle" class="text-xl font-bold">편집</h3>
-                <button onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-            </div>
-            <div id="editModalContent">
-                <!-- 편집 폼이 여기에 표시됩니다 -->
-            </div>
+  <!-- 편집 모달 -->
+  <div id="editModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
+      <div class="flex justify-between items-center mb-6">
+        <h3 id="editModalTitle" class="text-xl font-bold">편집</h3>
+        <button id="closeEditModalBtn" class="text-gray-400 hover:text-gray-600">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+      <div id="editModalContent"></div>
+    </div>
+  </div>
+
+  <!-- 삭제 확인 모달 -->
+  <div id="deleteModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white p-8 rounded-lg shadow-xl max-w-md w-full mx-4">
+      <div class="text-center mb-6">
+        <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+          <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.96-.833-2.73 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+          </svg>
         </div>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">삭제 확인</h3>
+        <p id="deleteMessage" class="text-sm text-gray-500 mb-4"></p>
+        <p class="text-xs text-red-600">이 작업은 되돌릴 수 없습니다.</p>
+      </div>
+      <div class="flex space-x-3">
+        <button id="cancelDeleteBtn" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">취소</button>
+        <button id="confirmDeleteBtn" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">삭제</button>
+      </div>
     </div>
+  </div>
 
-    <!-- 삭제 확인 모달 -->
-    <div id="deleteModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50">
-        <div class="bg-white p-8 rounded-lg shadow-xl max-w-md w-full mx-4">
-            <div class="text-center mb-6">
-                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
-                    <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.96-.833-2.73 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                    </svg>
-                </div>
-                <h3 class="text-lg font-medium text-gray-900 mb-2">삭제 확인</h3>
-                <p id="deleteMessage" class="text-sm text-gray-500 mb-4"></p>
-                <p class="text-xs text-red-600">이 작업은 되돌릴 수 없습니다.</p>
-            </div>
-            <div class="flex space-x-3">
-                <button onclick="closeDeleteModal()" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
-                    취소
-                </button>
-                <button id="confirmDeleteBtn" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
-                    삭제
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // 전역 변수
-        let currentUser = null;
-        let deleteCallback = null;
-        let organizationData = {
-            teams: [],
-            departments: [],
-            items: [],
-            expenses: [],
-            users: [
-                { id: 'admin', password: 'admin123', isAdmin: true, name: '관리자' },
-                { id: '100', password: 'team123', isAdmin: false, name: '목회행정팀', teamCode: '100' },
-                { id: '200', password: 'team123', isAdmin: false, name: '예배팀', teamCode: '200' },
-                { id: '300', password: 'team123', isAdmin: false, name: '2세 교육팀', teamCode: '300' }
-            ],
-            backups: []
-        };
-
-        // 초기 데이터 로드
-        function initializeData() {
-            const savedData = localStorage.getItem('nloc_bve_data');
-            if (savedData) {
-                organizationData = { ...organizationData, ...JSON.parse(savedData) };
-            } else {
-                // 초기 샘플 데이터
-                organizationData.teams = [
-                    { code: 'T001', name: '예배팀', leader: '김목사' },
-                    { code: 'T002', name: '교육팀', leader: '이전도사' },
-                    { code: 'T003', name: '선교팀', leader: '박장로' }
-                ];
-                
-                organizationData.departments = [
-                    { code: 'D001', name: '음향부서', teamCode: 'T001', leader: '김음향' },
-                    { code: 'D002', name: '영상부서', teamCode: 'T001', leader: '이영상' },
-                    { code: 'D003', name: '주일학교', teamCode: 'T002', leader: '박교사' }
-                ];
-                
-                organizationData.items = [
-                    { code: 'I001', name: '장비구입', deptCode: 'D001', budget: 5000.00, spent: 0.00 },
-                    { code: 'I002', name: '소모품', deptCode: 'D001', budget: 1000.00, spent: 0.00 },
-                    { code: 'I003', name: '카메라', deptCode: 'D002', budget: 3000.00, spent: 0.00 }
-                ];
-                
-                saveData();
-            }
-        }
-
-        // 데이터 저장
-        function saveData() {
-            localStorage.setItem('nloc_bve_data', JSON.stringify(organizationData));
-        }
-
-        // 로그인 처리
-        function handleLogin(event) {
-            event.preventDefault();
-            const username = document.getElementById('loginUsername').value;
-            const password = document.getElementById('loginPassword').value;
-
-            const user = organizationData.users.find(u => u.id === username && u.password === password);
-            
-            if (user) {
-                currentUser = user;
-                console.log('로그인 성공:', user);
-                document.getElementById('currentUser').textContent = `${user.name} 로그인 중...`;
-                document.getElementById('loginScreen').classList.add('hidden');
-                document.getElementById('mainApp').classList.remove('hidden');
-                
-                // 관리자가 아닌 경우 설정 버튼 숨기기
-                if (!user.isAdmin) {
-                    document.getElementById('settingsBtn').style.display = 'none';
-                }
-                
-                showSection('dashboard');
-                updateDashboard();
-                
-                // 드롭다운 메뉴 초기화
-                console.log('드롭다운 메뉴 초기화 시작');
-                populateSelects();
-                
-                // 지출 입력 폼 초기화 (기존 항목 모두 제거 후 하나만 추가)
-                document.getElementById('expenseItems').innerHTML = '';
-                addExpenseItem();
-                
-                console.log('로그인 후 초기화 완료');
-            } else {
-                alert('잘못된 사용자 정보입니다.');
-            }
-        }
-
-        // 로그아웃
-        function logout() {
-            // 자동 백업 생성
-            createBackup();
-            
-            currentUser = null;
-            document.getElementById('loginScreen').classList.remove('hidden');
-            document.getElementById('mainApp').classList.add('hidden');
-            document.getElementById('loginUsername').value = '';
-            document.getElementById('loginPassword').value = '';
-        }
-
-        // 섹션 표시
-        function showSection(sectionName) {
-            document.querySelectorAll('.section').forEach(section => {
-                section.classList.add('hidden');
-            });
-            document.getElementById(sectionName).classList.remove('hidden');
-            
-            if (sectionName === 'settings') {
-                updateSettingsContent();
-            }
-        }
-
-        // 대시보드 업데이트
-        function updateDashboard() {
-            let totalBudget = 0;
-            let totalExpenses = 0;
-            
-            if (currentUser.isAdmin) {
-                // 관리자: 전체 데이터
-                totalBudget = organizationData.items.reduce((sum, item) => sum + item.budget, 0);
-                totalExpenses = organizationData.items.reduce((sum, item) => sum + item.spent, 0);
-                document.getElementById('teamBudgetDetail').classList.add('hidden');
-                
-                // 관리자용 전체 예산 현황 표시
-                updateAdminBudgetDetail();
-                document.getElementById('adminBudgetDetail').classList.remove('hidden');
-            } else {
-                // 일반 사용자: 해당 팀만
-                const teamItems = organizationData.items.filter(item => {
-                    const dept = organizationData.departments.find(d => d.code === item.deptCode);
-                    return dept && dept.teamCode === currentUser.teamCode;
-                });
-                totalBudget = teamItems.reduce((sum, item) => sum + item.budget, 0);
-                totalExpenses = teamItems.reduce((sum, item) => sum + item.spent, 0);
-                
-                // 팀별 상세 예산 현황 표시
-                updateTeamBudgetDetail();
-                document.getElementById('teamBudgetDetail').classList.remove('hidden');
-                document.getElementById('adminBudgetDetail').classList.add('hidden');
-            }
-            
-            const totalBalance = totalBudget - totalExpenses;
-
-            document.getElementById('totalBudget').textContent = formatCurrency(totalBudget);
-            document.getElementById('totalExpenses').textContent = formatCurrency(totalExpenses);
-            document.getElementById('totalBalance').textContent = formatCurrency(totalBalance);
-
-            updateExpenseTable();
-        }
-
-        // 관리자용 전체 예산 현황 업데이트
-        function updateAdminBudgetDetail() {
-            if (!currentUser.isAdmin) return;
-            
-            const container = document.getElementById('adminBudgetTreeContent');
-            container.innerHTML = '';
-            
-            // 모든 팀에 대해 트리 구조 생성
-            organizationData.teams.forEach(team => {
-                let teamBudget = 0;
-                let teamSpent = 0;
-                
-                // 해당 팀의 부서들
-                const teamDepts = organizationData.departments.filter(d => d.teamCode === team.code);
-                
-                teamDepts.forEach(dept => {
-                    const deptItems = organizationData.items.filter(i => i.deptCode === dept.code);
-                    deptItems.forEach(item => {
-                        teamBudget += item.budget;
-                        teamSpent += item.spent;
-                    });
-                });
-                
-                // 팀 정보
-                const teamDiv = document.createElement('div');
-                teamDiv.className = 'border p-4 rounded mb-4 bg-blue-50';
-                teamDiv.innerHTML = `
-                    <h4 class="font-bold text-lg mb-2">${team.code} - ${team.name}</h4>
-                    <div class="grid grid-cols-3 gap-4 text-sm">
-                        <div>예산: <span class="font-bold text-blue-600">${formatCurrency(teamBudget)}</span></div>
-                        <div>지출: <span class="font-bold text-red-600">${formatCurrency(teamSpent)}</span></div>
-                        <div>잔액: <span class="font-bold text-green-600">${formatCurrency(teamBudget - teamSpent)}</span></div>
-                    </div>
-                `;
-                container.appendChild(teamDiv);
-                
-                // 부서별 상세 정보
-                teamDepts.forEach(dept => {
-                    const deptDiv = document.createElement('div');
-                    deptDiv.className = 'border p-3 rounded mb-3 bg-green-50 ml-4';
-                    
-                    let deptBudget = 0;
-                    let deptSpent = 0;
-                    const deptItems = organizationData.items.filter(i => i.deptCode === dept.code);
-                    
-                    deptItems.forEach(item => {
-                        deptBudget += item.budget;
-                        deptSpent += item.spent;
-                    });
-                    
-                    deptDiv.innerHTML = `
-                        <h5 class="font-bold mb-2">${dept.code} - ${dept.name}</h5>
-                        <div class="grid grid-cols-3 gap-4 text-sm mb-3">
-                            <div>예산: <span class="font-bold text-blue-600">${formatCurrency(deptBudget)}</span></div>
-                            <div>지출: <span class="font-bold text-red-600">${formatCurrency(deptSpent)}</span></div>
-                            <div>잔액: <span class="font-bold text-green-600">${formatCurrency(deptBudget - deptSpent)}</span></div>
-                        </div>
-                    `;
-                    
-                    // 항목별 상세 정보
-                    const itemsDiv = document.createElement('div');
-                    itemsDiv.className = 'ml-4 space-y-2';
-                    
-                    deptItems.forEach(item => {
-                        const itemDiv = document.createElement('div');
-                        itemDiv.className = 'border p-2 rounded bg-yellow-50 text-xs';
-                        itemDiv.innerHTML = `
-                            <div class="font-medium">${item.code} - ${item.name}</div>
-                            <div class="grid grid-cols-3 gap-2 mt-1">
-                                <div>예산: ${formatCurrency(item.budget)}</div>
-                                <div>지출: ${formatCurrency(item.spent)}</div>
-                                <div>잔액: ${formatCurrency(item.budget - item.spent)}</div>
-                            </div>
-                        `;
-                        itemsDiv.appendChild(itemDiv);
-                    });
-                    
-                    deptDiv.appendChild(itemsDiv);
-                    container.appendChild(deptDiv);
-                });
-            });
-        }
-
-        // 팀별 상세 예산 현황 업데이트
-        function updateTeamBudgetDetail() {
-            if (currentUser.isAdmin) return;
-            
-            const container = document.getElementById('budgetTreeContent');
-            container.innerHTML = '';
-            
-            const team = organizationData.teams.find(t => t.code === currentUser.teamCode);
-            if (!team) return;
-            
-            // 팀 정보
-            const teamDiv = document.createElement('div');
-            teamDiv.className = 'border p-4 rounded mb-4 bg-blue-50';
-            
-            let teamBudget = 0;
-            let teamSpent = 0;
-            
-            // 해당 팀의 부서들
-            const teamDepts = organizationData.departments.filter(d => d.teamCode === team.code);
-            
-            teamDepts.forEach(dept => {
-                const deptItems = organizationData.items.filter(i => i.deptCode === dept.code);
-                deptItems.forEach(item => {
-                    teamBudget += item.budget;
-                    teamSpent += item.spent;
-                });
-            });
-            
-            teamDiv.innerHTML = `
-                <h4 class="font-bold text-lg mb-2">${team.code} - ${team.name}</h4>
-                <div class="grid grid-cols-3 gap-4 text-sm">
-                    <div>예산: <span class="font-bold text-blue-600">${formatCurrency(teamBudget)}</span></div>
-                    <div>지출: <span class="font-bold text-red-600">${formatCurrency(teamSpent)}</span></div>
-                    <div>잔액: <span class="font-bold text-green-600">${formatCurrency(teamBudget - teamSpent)}</span></div>
-                </div>
-            `;
-            container.appendChild(teamDiv);
-            
-            // 부서별 상세 정보
-            teamDepts.forEach(dept => {
-                const deptDiv = document.createElement('div');
-                deptDiv.className = 'border p-3 rounded mb-3 bg-green-50 ml-4';
-                
-                let deptBudget = 0;
-                let deptSpent = 0;
-                const deptItems = organizationData.items.filter(i => i.deptCode === dept.code);
-                
-                deptItems.forEach(item => {
-                    deptBudget += item.budget;
-                    deptSpent += item.spent;
-                });
-                
-                deptDiv.innerHTML = `
-                    <h5 class="font-bold mb-2">${dept.code} - ${dept.name}</h5>
-                    <div class="grid grid-cols-3 gap-4 text-sm mb-3">
-                        <div>예산: <span class="font-bold text-blue-600">${formatCurrency(deptBudget)}</span></div>
-                        <div>지출: <span class="font-bold text-red-600">${formatCurrency(deptSpent)}</span></div>
-                        <div>잔액: <span class="font-bold text-green-600">${formatCurrency(deptBudget - deptSpent)}</span></div>
-                    </div>
-                `;
-                
-                // 항목별 상세 정보
-                const itemsDiv = document.createElement('div');
-                itemsDiv.className = 'ml-4 space-y-2';
-                
-                deptItems.forEach(item => {
-                    const itemDiv = document.createElement('div');
-                    itemDiv.className = 'border p-2 rounded bg-yellow-50 text-xs';
-                    itemDiv.innerHTML = `
-                        <div class="font-medium">${item.code} - ${item.name}</div>
-                        <div class="grid grid-cols-3 gap-2 mt-1">
-                            <div>예산: ${formatCurrency(item.budget)}</div>
-                            <div>지출: ${formatCurrency(item.spent)}</div>
-                            <div>잔액: ${formatCurrency(item.budget - item.spent)}</div>
-                        </div>
-                    `;
-                    itemsDiv.appendChild(itemDiv);
-                });
-                
-                deptDiv.appendChild(itemsDiv);
-                container.appendChild(deptDiv);
-            });
-        }
-
-        // 통화 포맷
-        function formatCurrency(amount) {
-            return new Intl.NumberFormat('en-US', {
-                style: 'currency',
-                currency: 'USD',
-                minimumFractionDigits: 2
-            }).format(amount);
-        }
-
-        // 선택 박스 채우기
-        function populateSelects() {
-            console.log('선택박스 채우기 시작');
-            console.log('현재 팀 데이터:', organizationData.teams);
-            console.log('현재 사용자:', currentUser);
-            
-            const teamSelect = document.getElementById('teamSelect');
-            if (!teamSelect) {
-                console.error('teamSelect 요소를 찾을 수 없습니다');
-                return;
-            }
-            
-            teamSelect.innerHTML = '<option value="">팀을 선택하세요</option>';
-            
-            let teamsToShow = organizationData.teams;
-            if (!currentUser.isAdmin) {
-                teamsToShow = organizationData.teams.filter(team => team.code === currentUser.teamCode);
-                console.log('일반 사용자용 필터된 팀:', teamsToShow);
-            }
-            
-            teamsToShow.forEach(team => {
-                const option = document.createElement('option');
-                option.value = team.code;
-                option.textContent = `${team.code} - ${team.name}`;
-                teamSelect.appendChild(option);
-                console.log('팀 옵션 추가:', team.code, team.name);
-            });
-            
-            console.log('선택박스 채우기 완료, 총', teamsToShow.length, '개 팀 추가됨');
-        }
-
-        // 부서 선택 박스 업데이트
-        function updateDepartmentSelect() {
-            const teamCode = document.getElementById('teamSelect').value;
-            const departmentSelect = document.getElementById('departmentSelect');
-            const itemSelect = document.getElementById('itemSelect');
-            
-            departmentSelect.innerHTML = '<option value="">부서를 선택하세요</option>';
-            itemSelect.innerHTML = '<option value="">항목을 선택하세요</option>';
-            
-            if (teamCode) {
-                const departments = organizationData.departments.filter(dept => dept.teamCode === teamCode);
-                departments.forEach(dept => {
-                    const option = document.createElement('option');
-                    option.value = dept.code;
-                    option.textContent = `${dept.code} - ${dept.name}`;
-                    departmentSelect.appendChild(option);
-                });
-            }
-        }
-
-        // 항목 선택 박스 업데이트
-        function updateItemSelect() {
-            const deptCode = document.getElementById('departmentSelect').value;
-            const itemSelect = document.getElementById('itemSelect');
-            
-            itemSelect.innerHTML = '<option value="">항목을 선택하세요</option>';
-            
-            if (deptCode) {
-                const items = organizationData.items.filter(item => item.deptCode === deptCode);
-                items.forEach(item => {
-                    const option = document.createElement('option');
-                    option.value = item.code;
-                    option.textContent = `${item.code} - ${item.name} (잔액: ${formatCurrency(item.budget - item.spent)})`;
-                    itemSelect.appendChild(option);
-                });
-            }
-        }
-
-        // 지출 항목 추가
-        function addExpenseItem() {
-            const container = document.getElementById('expenseItems');
-            const itemCount = container.children.length;
-            
-            if (itemCount >= 5) {
-                alert('최대 5개 항목까지만 추가할 수 있습니다.');
-                return;
-            }
-            
-            const itemDiv = document.createElement('div');
-            itemDiv.className = 'expense-row flex space-x-2';
-            itemDiv.innerHTML = `
-                <div class="flex-1">
-                    <input type="text" class="expense-description w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="지출 내용" onchange="calculateTotal()">
-                </div>
-                <div class="w-32">
-                    <input type="number" step="0.01" class="expense-amount w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="0.00" onchange="calculateTotal()">
-                </div>
-                <button type="button" onclick="removeExpenseItem(this)" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded">
-                    삭제
-                </button>
-            `;
-            container.appendChild(itemDiv);
-        }
-
-        // 지출 항목 제거
-        function removeExpenseItem(button) {
-            const itemDiv = button.parentElement;
-            itemDiv.style.opacity = '0';
-            setTimeout(() => {
-                itemDiv.remove();
-                calculateTotal();
-            }, 300);
-        }
-
-        // 총액 계산
-        function calculateTotal() {
-            const amounts = document.querySelectorAll('.expense-amount');
-            let total = 0;
-            amounts.forEach(input => {
-                const value = parseFloat(input.value) || 0;
-                total += value;
-            });
-            document.getElementById('totalAmount').value = formatCurrency(total);
-        }
-
-        // 지출 추가
-        function addExpense(event) {
-            event.preventDefault();
-            
-            const teamCode = document.getElementById('teamSelect').value;
-            const deptCode = document.getElementById('departmentSelect').value;
-            const itemCode = document.getElementById('itemSelect').value;
-            
-            if (!teamCode || !deptCode || !itemCode) {
-                alert('팀, 부서, 항목을 모두 선택해주세요.');
-                return;
-            }
-            
-            const descriptions = document.querySelectorAll('.expense-description');
-            const amounts = document.querySelectorAll('.expense-amount');
-            
-            let totalAmount = 0;
-            const expenseItems = [];
-            
-            for (let i = 0; i < descriptions.length; i++) {
-                const desc = descriptions[i].value.trim();
-                const amount = parseFloat(amounts[i].value) || 0;
-                
-                if (desc && amount > 0) {
-                    expenseItems.push({ description: desc, amount: amount });
-                    totalAmount += amount;
-                }
-            }
-            
-            if (expenseItems.length === 0) {
-                alert('최소 하나의 지출 항목을 입력해주세요.');
-                return;
-            }
-            
-            // 예산 확인
-            const item = organizationData.items.find(i => i.code === itemCode);
-            if (item.budget - item.spent < totalAmount) {
-                if (!confirm(`예산을 초과합니다. 계속하시겠습니까?\n잔액: ${formatCurrency(item.budget - item.spent)}\n지출: ${formatCurrency(totalAmount)}`)) {
-                    return;
-                }
-            }
-            
-            // 지출 기록 추가
-            const expense = {
-                id: Date.now(),
-                date: new Date().toISOString().split('T')[0],
-                teamCode: teamCode,
-                deptCode: deptCode,
-                itemCode: itemCode,
-                items: expenseItems,
-                totalAmount: totalAmount,
-                createdBy: currentUser.name
-            };
-            
-            organizationData.expenses.push(expense);
-            
-            // 항목 지출 업데이트
-            item.spent += totalAmount;
-            
-            saveData();
-            updateDashboard();
-            
-            // 폼 초기화
-            document.getElementById('expenseItems').innerHTML = '';
-            addExpenseItem();
-            document.getElementById('totalAmount').value = '';
-            
-            // 지출청구서 생성 확인
-            if (confirm('지출청구서를 생성하시겠습니까?')) {
-                showExpenseForm(expense);
-            }
-        }
-
-        // 지출 취소
-        function cancelExpense() {
-            document.getElementById('expenseItems').innerHTML = '';
-            addExpenseItem();
-            document.getElementById('totalAmount').value = '';
-            document.getElementById('teamSelect').value = '';
-            document.getElementById('departmentSelect').innerHTML = '<option value="">부서를 선택하세요</option>';
-            document.getElementById('itemSelect').innerHTML = '<option value="">항목을 선택하세요</option>';
-        }
-
-        // 지출 내역 테이블 업데이트
-        function updateExpenseTable() {
-            const tbody = document.getElementById('expenseTableBody');
-            tbody.innerHTML = '';
-            
-            let expensesToShow = organizationData.expenses;
-            if (!currentUser.isAdmin) {
-                expensesToShow = organizationData.expenses.filter(expense => expense.teamCode === currentUser.teamCode);
-            }
-            
-            expensesToShow.forEach(expense => {
-                const team = organizationData.teams.find(t => t.code === expense.teamCode);
-                const dept = organizationData.departments.find(d => d.code === expense.deptCode);
-                const item = organizationData.items.find(i => i.code === expense.itemCode);
-                
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td class="px-4 py-2">${expense.date}</td>
-                    <td class="px-4 py-2">${team ? team.name : expense.teamCode}</td>
-                    <td class="px-4 py-2">${dept ? dept.name : expense.deptCode}</td>
-                    <td class="px-4 py-2">${item ? item.name : expense.itemCode}</td>
-                    <td class="px-4 py-2">${expense.items.map(i => i.description).join(', ')}</td>
-                    <td class="px-4 py-2">${formatCurrency(expense.totalAmount)}</td>
-                    <td class="px-4 py-2 no-print">
-                        <button onclick="showExpenseForm(${JSON.stringify(expense).replace(/"/g, '&quot;')})" class="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded text-sm mr-1">
-                            청구서
-                        </button>
-                        <button onclick="showDeleteConfirmation('지출', '${expense.id}', () => deleteExpense(${expense.id}))" class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-sm">
-                            삭제
-                        </button>
-                    </td>
-                `;
-                tbody.appendChild(row);
-            });
-        }
-
-        // 지출 삭제
-        function deleteExpense(id) {
-            const expense = organizationData.expenses.find(e => e.id === id);
-            if (expense) {
-                // 항목 지출에서 차감
-                const item = organizationData.items.find(i => i.code === expense.itemCode);
-                if (item) {
-                    item.spent -= expense.totalAmount;
-                }
-                
-                // 지출 기록 삭제
-                organizationData.expenses = organizationData.expenses.filter(e => e.id !== id);
-                saveData();
-                updateDashboard();
-                closeDeleteModal();
-                alert('지출이 성공적으로 삭제되었습니다.');
-            }
-        }
-
-        // 지출청구서 표시
-        function showExpenseForm(expense) {
-            const team = organizationData.teams.find(t => t.code === expense.teamCode);
-            const dept = organizationData.departments.find(d => d.code === expense.deptCode);
-            const item = organizationData.items.find(i => i.code === expense.itemCode);
-            
-            const formContent = `
-                <div class="text-center mb-8">
-                    <h1 class="text-3xl font-bold mb-2">지출 청구서</h1>
-                    <p class="text-gray-600">NLOC BUDGET/EXPENSE</p>
-                </div>
-                
-                <div class="grid grid-cols-2 gap-8 mb-8">
-                    <div>
-                        <h3 class="font-bold mb-4">기본 정보</h3>
-                        <div class="space-y-2">
-                            <p><strong>팀 코드:</strong> ${expense.teamCode}</p>
-                            <p><strong>팀 이름:</strong> ${team ? team.name : ''}</p>
-                            <p><strong>부서 코드:</strong> ${expense.deptCode}</p>
-                            <p><strong>부서 이름:</strong> ${dept ? dept.name : ''}</p>
-                            <p><strong>날짜:</strong> ${expense.date}</p>
-                        </div>
-                    </div>
-                    <div>
-                        <h3 class="font-bold mb-4">담당자 정보</h3>
-                        <div class="space-y-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">수령인:</label>
-                                <div class="border-b border-gray-300 pb-1 mt-1">_________________</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="mb-8">
-                    <h3 class="font-bold mb-4">지출 내역</h3>
-                    <table class="w-full border border-gray-300">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="border border-gray-300 px-4 py-2 text-left">예산 항목</th>
-                                <th class="border border-gray-300 px-4 py-2 text-left">내용</th>
-                                <th class="border border-gray-300 px-4 py-2 text-right">금액</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${expense.items.map(expenseItem => `
-                                <tr>
-                                    <td class="border border-gray-300 px-4 py-2">${item ? item.name : ''}</td>
-                                    <td class="border border-gray-300 px-4 py-2">${expenseItem.description}</td>
-                                    <td class="border border-gray-300 px-4 py-2 text-right">${formatCurrency(expenseItem.amount)}</td>
-                                </tr>
-                            `).join('')}
-                            ${Array(5 - expense.items.length).fill().map(() => `
-                                <tr>
-                                    <td class="border border-gray-300 px-4 py-2">&nbsp;</td>
-                                    <td class="border border-gray-300 px-4 py-2">&nbsp;</td>
-                                    <td class="border border-gray-300 px-4 py-2">&nbsp;</td>
-                                </tr>
-                            `).join('')}
-                            <tr class="bg-gray-50 font-bold">
-                                <td class="border border-gray-300 px-4 py-2" colspan="2">총 금액</td>
-                                <td class="border border-gray-300 px-4 py-2 text-right">${formatCurrency(expense.totalAmount)}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                
-                <div class="grid grid-cols-3 gap-8 mt-12">
-                    <div class="text-center">
-                        <div class="border-b border-gray-300 pb-1 mb-2">_________________</div>
-                        <p class="text-sm">청구자: ${expense.createdBy}</p>
-                    </div>
-                    <div class="text-center">
-                        <div class="border-b border-gray-300 pb-1 mb-2">_________________</div>
-                        <p class="text-sm">부서장: ${dept ? dept.leader : ''}</p>
-                    </div>
-                    <div class="text-center">
-                        <div class="border-b border-gray-300 pb-1 mb-2">_________________</div>
-                        <p class="text-sm">팀장: ${team ? team.leader : ''}</p>
-                    </div>
-                </div>
-            `;
-            
-            document.getElementById('expenseFormContent').innerHTML = formContent;
-            document.getElementById('expenseFormModal').classList.remove('hidden');
-            document.getElementById('expenseFormModal').classList.add('flex');
-        }
-
-        // 지출청구서 닫기
-        function closeExpenseForm() {
-            document.getElementById('expenseFormModal').classList.add('hidden');
-            document.getElementById('expenseFormModal').classList.remove('flex');
-        }
-
-        // 지출청구서 인쇄
-        function printExpenseForm() {
-            const printContent = document.getElementById('expenseFormContent').innerHTML;
-            const printWindow = window.open('', '_blank');
-            printWindow.document.write(`
-                <html>
-                <head>
-                    <title>지출 청구서</title>
-                    <style>
-                        body { font-family: Arial, sans-serif; margin: 20px; }
-                        table { border-collapse: collapse; width: 100%; }
-                        th, td { border: 1px solid #000; padding: 8px; text-align: left; }
-                        .text-center { text-align: center; }
-                        .text-right { text-align: right; }
-                        .font-bold { font-weight: bold; }
-                        .bg-gray-50 { background-color: #f9f9f9; }
-                        .grid { display: grid; }
-                        .grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
-                        .grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
-                        .gap-8 { gap: 2rem; }
-                        .mb-2 { margin-bottom: 0.5rem; }
-                        .mb-4 { margin-bottom: 1rem; }
-                        .mb-8 { margin-bottom: 2rem; }
-                        .mt-12 { margin-top: 3rem; }
-                        .space-y-2 > * + * { margin-top: 0.5rem; }
-                        .space-y-4 > * + * { margin-top: 1rem; }
-                        .border-b { border-bottom: 1px solid #000; }
-                        .pb-1 { padding-bottom: 0.25rem; }
-                        .mt-1 { margin-top: 0.25rem; }
-                    </style>
-                </head>
-                <body>
-                    ${printContent}
-                </body>
-                </html>
-            `);
-            printWindow.document.close();
-            printWindow.print();
-            printWindow.close();
-        }
-
-        // Excel 내보내기
-        function exportToExcel() {
-            let csvContent = "날짜,팀,부서,항목,내용,금액\n";
-            
-            let expensesToExport = organizationData.expenses;
-            if (!currentUser.isAdmin) {
-                expensesToExport = organizationData.expenses.filter(expense => expense.teamCode === currentUser.teamCode);
-            }
-            
-            expensesToExport.forEach(expense => {
-                const team = organizationData.teams.find(t => t.code === expense.teamCode);
-                const dept = organizationData.departments.find(d => d.code === expense.deptCode);
-                const item = organizationData.items.find(i => i.code === expense.itemCode);
-                
-                expense.items.forEach(expenseItem => {
-                    csvContent += `${expense.date},"${team ? team.name : expense.teamCode}","${dept ? dept.name : expense.deptCode}","${item ? item.name : expense.itemCode}","${expenseItem.description}",${expenseItem.amount}\n`;
-                });
-            });
-            
-            const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            const url = URL.createObjectURL(blob);
-            link.setAttribute('href', url);
-            link.setAttribute('download', `지출내역_${new Date().toISOString().split('T')[0]}.csv`);
-            link.style.visibility = 'hidden';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-        }
-
-        // 인쇄
-        function printExpenses() {
-            const printContent = document.querySelector('#dashboard .bg-white:last-of-type').innerHTML;
-            const printWindow = window.open('', '_blank');
-            printWindow.document.write(`
-                <html>
-                <head>
-                    <title>지출 내역</title>
-                    <style>
-                        body { font-family: Arial, sans-serif; margin: 20px; }
-                        table { border-collapse: collapse; width: 100%; }
-                        th, td { border: 1px solid #000; padding: 8px; text-align: left; }
-                        th { background-color: #f9f9f9; }
-                        .no-print { display: none; }
-                    </style>
-                </head>
-                <body>
-                    <h1>지출 내역</h1>
-                    ${printContent}
-                </body>
-                </html>
-            `);
-            printWindow.document.close();
-            printWindow.print();
-            printWindow.close();
-        }
-
-        // 예산 검증
-        function checkBudgetBalance() {
-            let report = "예산 검증 결과:\n\n";
-            let totalBudget = 0;
-            let totalSpent = 0;
-            let hasError = false;
-            
-            let itemsToCheck = organizationData.items;
-            if (!currentUser.isAdmin) {
-                itemsToCheck = organizationData.items.filter(item => {
-                    const dept = organizationData.departments.find(d => d.code === item.deptCode);
-                    return dept && dept.teamCode === currentUser.teamCode;
-                });
-            }
-            
-            itemsToCheck.forEach(item => {
-                totalBudget += item.budget;
-                totalSpent += item.spent;
-                
-                const dept = organizationData.departments.find(d => d.code === item.deptCode);
-                const team = organizationData.teams.find(t => t.code === dept?.teamCode);
-                
-                if (item.spent > item.budget) {
-                    report += `⚠️ ${team?.name || ''} > ${dept?.name || ''} > ${item.name}: 예산 초과 (${formatCurrency(item.spent - item.budget)})\n`;
-                    hasError = true;
-                }
-            });
-            
-            report += `\n총 예산: ${formatCurrency(totalBudget)}\n`;
-            report += `총 지출: ${formatCurrency(totalSpent)}\n`;
-            report += `잔액: ${formatCurrency(totalBudget - totalSpent)}\n`;
-            
-            if (!hasError) {
-                report += "\n✅ 모든 예산이 정상 범위 내에 있습니다.";
-            }
-            
-            alert(report);
-        }
-
-        // 설정 탭 표시
-        function showSettingsTab(tabName) {
-            // 모든 설정 탭 숨기기
-            document.querySelectorAll('.settings-content').forEach(content => {
-                content.classList.add('hidden');
-            });
-            
-            // 모든 탭 버튼 비활성화
-            document.querySelectorAll('.settings-tab').forEach(tab => {
-                tab.classList.remove('border-blue-500', 'text-blue-600');
-                tab.classList.add('border-transparent', 'text-gray-500');
-            });
-            
-            // 선택된 탭 표시
-            document.getElementById(tabName + 'Tab').classList.remove('hidden');
-            event.target.classList.remove('border-transparent', 'text-gray-500');
-            event.target.classList.add('border-blue-500', 'text-blue-600');
-            
-            updateSettingsContent();
-        }
-
-        // 설정 내용 업데이트
-        function updateSettingsContent() {
-            updateTeamsList();
-            updateDepartmentsList();
-            updateItemsList();
-            updateBudgetsList();
-            updateUsersList();
-            updateBackupsList();
-            populateSettingsSelects();
-        }
-
-        // 설정 선택박스 채우기
-        function populateSettingsSelects() {
-            // 부서 추가용 팀 선택박스
-            const deptTeamSelect = document.getElementById('deptTeamSelect');
-            deptTeamSelect.innerHTML = '<option value="">팀 선택</option>';
-            organizationData.teams.forEach(team => {
-                const option = document.createElement('option');
-                option.value = team.code;
-                option.textContent = `${team.code} - ${team.name}`;
-                deptTeamSelect.appendChild(option);
-            });
-            
-            // 항목 추가용 부서 선택박스
-            const itemDeptSelect = document.getElementById('itemDeptSelect');
-            itemDeptSelect.innerHTML = '<option value="">부서 선택</option>';
-            organizationData.departments.forEach(dept => {
-                const team = organizationData.teams.find(t => t.code === dept.teamCode);
-                const option = document.createElement('option');
-                option.value = dept.code;
-                option.textContent = `${dept.code} - ${dept.name} (${team ? team.name : ''})`;
-                itemDeptSelect.appendChild(option);
-            });
-        }
-
-        // 팀 추가
-        function addTeam(event) {
-            event.preventDefault();
-            
-            const code = document.getElementById('teamCode').value.trim();
-            const name = document.getElementById('teamName').value.trim();
-            const leader = document.getElementById('teamLeader').value.trim();
-            
-            // 입력 검증
-            if (!code) {
-                alert('⚠️ 팀 코드를 입력해주세요.');
-                document.getElementById('teamCode').focus();
-                return;
-            }
-            if (!name) {
-                alert('⚠️ 팀 이름을 입력해주세요.');
-                document.getElementById('teamName').focus();
-                return;
-            }
-            if (!leader) {
-                alert('⚠️ 팀장을 입력해주세요.');
-                document.getElementById('teamLeader').focus();
-                return;
-            }
-            
-            if (organizationData.teams.find(t => t.code === code)) {
-                alert('이미 존재하는 팀 코드입니다.');
-                return;
-            }
-            
-            console.log('새 팀 추가:', { code, name, leader });
-            organizationData.teams.push({ code, name, leader });
-            
-            // 팀 사용자 자동 생성
-            organizationData.users.push({
-                id: code,
-                password: 'team123',
-                isAdmin: false,
-                name: name,
-                teamCode: code
-            });
-            
-            saveData();
-            updateSettingsContent();
-            
-            // 대시보드 드롭다운도 업데이트
-            populateSelects();
-            
-            // 폼 초기화
-            document.getElementById('teamCode').value = '';
-            document.getElementById('teamName').value = '';
-            document.getElementById('teamLeader').value = '';
-            
-            alert('팀이 성공적으로 추가되었습니다.');
-        }
-
-        // 부서 추가
-        function addDepartment(event) {
-            event.preventDefault();
-            
-            const teamCode = document.getElementById('deptTeamSelect').value;
-            const code = document.getElementById('deptCode').value.trim();
-            const name = document.getElementById('deptName').value.trim();
-            const leader = document.getElementById('deptLeader').value.trim();
-            
-            // 입력 검증
-            if (!teamCode) {
-                alert('⚠️ 소속 팀을 선택해주세요.');
-                document.getElementById('deptTeamSelect').focus();
-                return;
-            }
-            if (!code) {
-                alert('⚠️ 부서 코드를 입력해주세요.');
-                document.getElementById('deptCode').focus();
-                return;
-            }
-            if (!name) {
-                alert('⚠️ 부서 이름을 입력해주세요.');
-                document.getElementById('deptName').focus();
-                return;
-            }
-            if (!leader) {
-                alert('⚠️ 부서장을 입력해주세요.');
-                document.getElementById('deptLeader').focus();
-                return;
-            }
-            
-            if (organizationData.departments.find(d => d.code === code)) {
-                alert('이미 존재하는 부서 코드입니다.');
-                return;
-            }
-            
-            console.log('새 부서 추가:', { code, name, teamCode, leader });
-            organizationData.departments.push({ code, name, teamCode, leader });
-            saveData();
-            updateSettingsContent();
-            
-            // 대시보드 드롭다운도 업데이트 (현재 선택된 팀이 있다면 부서 목록 갱신)
-            const currentTeamSelect = document.getElementById('teamSelect');
-            if (currentTeamSelect && currentTeamSelect.value === teamCode) {
-                updateDepartmentSelect();
-            }
-            
-            // 폼 초기화
-            document.getElementById('deptTeamSelect').value = '';
-            document.getElementById('deptCode').value = '';
-            document.getElementById('deptName').value = '';
-            document.getElementById('deptLeader').value = '';
-            
-            alert('부서가 성공적으로 추가되었습니다.');
-        }
-
-        // 항목 추가
-        function addItem(event) {
-            event.preventDefault();
-            
-            const deptCode = document.getElementById('itemDeptSelect').value;
-            const code = document.getElementById('itemCode').value.trim();
-            const name = document.getElementById('itemName').value.trim();
-            const budgetValue = document.getElementById('itemBudget').value.trim();
-            const budget = parseFloat(budgetValue);
-            
-            // 입력 검증
-            if (!deptCode) {
-                alert('⚠️ 소속 부서를 선택해주세요.');
-                document.getElementById('itemDeptSelect').focus();
-                return;
-            }
-            if (!code) {
-                alert('⚠️ 항목 코드를 입력해주세요.');
-                document.getElementById('itemCode').focus();
-                return;
-            }
-            if (!name) {
-                alert('⚠️ 항목 이름을 입력해주세요.');
-                document.getElementById('itemName').focus();
-                return;
-            }
-            if (!budgetValue || isNaN(budget) || budget <= 0) {
-                alert('⚠️ 올바른 예산 금액을 입력해주세요.');
-                document.getElementById('itemBudget').focus();
-                return;
-            }
-            
-            if (organizationData.items.find(i => i.code === code)) {
-                alert('이미 존재하는 항목 코드입니다.');
-                return;
-            }
-            
-            console.log('새 항목 추가:', { code, name, deptCode, budget });
-            organizationData.items.push({ code, name, deptCode, budget, spent: 0.00 });
-            saveData();
-            updateSettingsContent();
-            updateDashboard();
-            
-            // 대시보드 드롭다운도 업데이트 (현재 선택된 부서가 있다면 항목 목록 갱신)
-            const currentDeptSelect = document.getElementById('departmentSelect');
-            if (currentDeptSelect && currentDeptSelect.value === deptCode) {
-                updateItemSelect();
-            }
-            
-            // 폼 초기화
-            document.getElementById('itemDeptSelect').value = '';
-            document.getElementById('itemCode').value = '';
-            document.getElementById('itemName').value = '';
-            document.getElementById('itemBudget').value = '';
-            
-            alert('항목이 성공적으로 추가되었습니다.');
-        }
-
-        // 팀 목록 업데이트
-        function updateTeamsList() {
-            const container = document.getElementById('teamsList');
-            container.innerHTML = '';
-            
-            organizationData.teams.sort((a, b) => a.code.localeCompare(b.code)).forEach(team => {
-                const div = document.createElement('div');
-                div.className = 'border p-4 rounded mb-2';
-                div.innerHTML = `
-                    <div class="flex justify-between items-center">
-                        <div>
-                            <strong>${team.code} - ${team.name}</strong>
-                            <p class="text-sm text-gray-600">팀장: ${team.leader}</p>
-                        </div>
-                        <div class="space-x-2">
-                            <button onclick="editTeam('${team.code}')" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm">
-                                편집
-                            </button>
-                            <button onclick="showDeleteConfirmation('팀', '${team.code}', () => deleteTeam('${team.code}'))" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm">
-                                삭제
-                            </button>
-                        </div>
-                    </div>
-                `;
-                container.appendChild(div);
-            });
-        }
-
-        // 부서 목록 업데이트
-        function updateDepartmentsList() {
-            const container = document.getElementById('departmentsList');
-            container.innerHTML = '';
-            
-            organizationData.departments.sort((a, b) => a.code.localeCompare(b.code)).forEach(dept => {
-                const team = organizationData.teams.find(t => t.code === dept.teamCode);
-                const div = document.createElement('div');
-                div.className = 'border p-4 rounded mb-2';
-                div.innerHTML = `
-                    <div class="flex justify-between items-center">
-                        <div>
-                            <strong>${dept.code} - ${dept.name}</strong>
-                            <p class="text-sm text-gray-600">소속팀: ${team ? team.name : dept.teamCode}</p>
-                            <p class="text-sm text-gray-600">부서장: ${dept.leader}</p>
-                        </div>
-                        <div class="space-x-2">
-                            <button onclick="editDepartment('${dept.code}')" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm">
-                                편집
-                            </button>
-                            <button onclick="showDeleteConfirmation('부서', '${dept.code}', () => deleteDepartment('${dept.code}'))" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm">
-                                삭제
-                            </button>
-                        </div>
-                    </div>
-                `;
-                container.appendChild(div);
-            });
-        }
-
-        // 항목 목록 업데이트
-        function updateItemsList() {
-            const container = document.getElementById('itemsList');
-            container.innerHTML = '';
-            
-            organizationData.items.sort((a, b) => a.code.localeCompare(b.code)).forEach(item => {
-                const dept = organizationData.departments.find(d => d.code === item.deptCode);
-                const team = organizationData.teams.find(t => t.code === dept?.teamCode);
-                const div = document.createElement('div');
-                div.className = 'border p-4 rounded mb-2';
-                div.innerHTML = `
-                    <div class="flex justify-between items-center">
-                        <div>
-                            <strong>${item.code} - ${item.name}</strong>
-                            <p class="text-sm text-gray-600">소속: ${team ? team.name : ''} > ${dept ? dept.name : item.deptCode}</p>
-                            <p class="text-sm text-gray-600">예산: ${formatCurrency(item.budget)} | 지출: ${formatCurrency(item.spent)} | 잔액: ${formatCurrency(item.budget - item.spent)}</p>
-                        </div>
-                        <div class="space-x-2">
-                            <button onclick="editItem('${item.code}')" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm">
-                                편집
-                            </button>
-                            <button onclick="showDeleteConfirmation('항목', '${item.code}', () => deleteItem('${item.code}'))" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm">
-                                삭제
-                            </button>
-                        </div>
-                    </div>
-                `;
-                container.appendChild(div);
-            });
-        }
-
-        // 예산 목록 업데이트
-        function updateBudgetsList() {
-            const container = document.getElementById('budgetsList');
-            container.innerHTML = '';
-            
-            const teamBudgets = {};
-            const deptBudgets = {};
-            
-            organizationData.items.forEach(item => {
-                const dept = organizationData.departments.find(d => d.code === item.deptCode);
-                const team = organizationData.teams.find(t => t.code === dept?.teamCode);
-                
-                if (team) {
-                    if (!teamBudgets[team.code]) {
-                        teamBudgets[team.code] = { name: team.name, budget: 0, spent: 0 };
-                    }
-                    teamBudgets[team.code].budget += item.budget;
-                    teamBudgets[team.code].spent += item.spent;
-                }
-                
-                if (dept) {
-                    if (!deptBudgets[dept.code]) {
-                        deptBudgets[dept.code] = { name: dept.name, teamName: team?.name, budget: 0, spent: 0 };
-                    }
-                    deptBudgets[dept.code].budget += item.budget;
-                    deptBudgets[dept.code].spent += item.spent;
-                }
-            });
-            
-            // 팀별 예산 - 통일된 레이아웃
-            Object.entries(teamBudgets).forEach(([code, data]) => {
-                const div = document.createElement('div');
-                div.className = 'border p-4 rounded mb-2 bg-green-50';
-                div.innerHTML = `
-                    <h4 class="font-bold">${code} - ${data.name} (팀)</h4>
-                    <p>예산: ${formatCurrency(data.budget)} | 지출: ${formatCurrency(data.spent)} | 잔액: ${formatCurrency(data.budget - data.spent)}</p>
-                `;
-                container.appendChild(div);
-            });
-            
-            // 부서별 예산 - 통일된 레이아웃
-            Object.entries(deptBudgets).forEach(([code, data]) => {
-                const div = document.createElement('div');
-                div.className = 'border p-4 rounded mb-2 bg-green-50 ml-4';
-                div.innerHTML = `
-                    <h5 class="font-bold">${code} - ${data.name} (부서)</h5>
-                    <p class="text-sm">소속팀: ${data.teamName}</p>
-                    <p>예산: ${formatCurrency(data.budget)} | 지출: ${formatCurrency(data.spent)} | 잔액: ${formatCurrency(data.budget - data.spent)}</p>
-                `;
-                container.appendChild(div);
-            });
-        }
-
-        // 사용자 목록 업데이트
-        function updateUsersList() {
-            const container = document.getElementById('usersList');
-            container.innerHTML = '';
-            
-            organizationData.users.forEach(user => {
-                if (user.id === 'admin') return; // 관리자는 제외
-                
-                const div = document.createElement('div');
-                div.className = 'border p-4 rounded mb-2';
-                div.innerHTML = `
-                    <div class="flex justify-between items-center">
-                        <div>
-                            <strong>${user.id} - ${user.name}</strong>
-                        </div>
-                        <div class="flex space-x-2">
-                            <input type="password" id="newPassword_${user.id}" placeholder="새 비밀번호" class="px-3 py-1 border rounded">
-                            <button onclick="changePassword('${user.id}')" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm">
-                                변경
-                            </button>
-                        </div>
-                    </div>
-                `;
-                container.appendChild(div);
-            });
-        }
-
-        // 비밀번호 변경
-        function changePassword(userId) {
-            const newPassword = document.getElementById(`newPassword_${userId}`).value;
-            if (!newPassword) {
-                alert('새 비밀번호를 입력해주세요.');
-                return;
-            }
-            
-            const user = organizationData.users.find(u => u.id === userId);
-            if (user) {
-                user.password = newPassword;
-                saveData();
-                alert('비밀번호가 변경되었습니다.');
-                document.getElementById(`newPassword_${userId}`).value = '';
-            }
-        }
-
-        // 사용자 삭제
-        function deleteUser(userId) {
-            organizationData.users = organizationData.users.filter(u => u.id !== userId);
-            saveData();
-            updateUsersList();
-            closeDeleteModal();
-            alert('사용자가 성공적으로 삭제되었습니다.');
-        }
-
-        // 백업 생성
-        function createBackup() {
-            const backup = {
-                id: Date.now(),
-                date: new Date().toISOString(),
-                data: JSON.parse(JSON.stringify(organizationData))
-            };
-            
-            organizationData.backups.push(backup);
-            saveData();
-            updateBackupsList();
-        }
-
-        // 백업 목록 업데이트
-        function updateBackupsList() {
-            const container = document.getElementById('backupsList');
-            container.innerHTML = '';
-            
-            organizationData.backups.sort((a, b) => b.id - a.id).forEach(backup => {
-                const div = document.createElement('div');
-                div.className = 'border p-4 rounded mb-2';
-                div.innerHTML = `
-                    <div class="flex justify-between items-center">
-                        <div>
-                            <strong>백업 ${backup.id}</strong>
-                            <p class="text-sm text-gray-600">${new Date(backup.date).toLocaleString('ko-KR')}</p>
-                        </div>
-                        <div class="space-x-2">
-                            <button onclick="restoreBackup(${backup.id})" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm">
-                                복원
-                            </button>
-                            <button onclick="showDeleteConfirmation('백업', '${backup.id}', () => deleteBackup(${backup.id}))" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm">
-                                삭제
-                            </button>
-                        </div>
-                    </div>
-                `;
-                container.appendChild(div);
-            });
-        }
-
-        // 백업 복원
-        function restoreBackup(backupId) {
-            if (confirm('이 백업으로 복원하시겠습니까? 현재 데이터는 손실됩니다.')) {
-                const backup = organizationData.backups.find(b => b.id === backupId);
-                if (backup) {
-                    organizationData = backup.data;
-                    saveData();
-                    alert('백업이 복원되었습니다. 페이지를 새로고침합니다.');
-                    location.reload();
-                }
-            }
-        }
-
-        // 백업 삭제
-        function deleteBackup(backupId) {
-            organizationData.backups = organizationData.backups.filter(b => b.id !== backupId);
-            saveData();
-            updateBackupsList();
-            closeDeleteModal();
-            alert('백업이 성공적으로 삭제되었습니다.');
-        }
-
-        // 편집 모달 관련 함수들
-        function editTeam(code) {
-            const team = organizationData.teams.find(t => t.code === code);
-            if (!team) return;
-            
-            document.getElementById('editModalTitle').textContent = '팀 편집';
-            document.getElementById('editModalContent').innerHTML = `
-                <form onsubmit="updateTeam(event, '${code}')">
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">팀 코드</label>
-                            <input type="text" id="editTeamCode" value="${team.code}" class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100" readonly>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">팀 이름</label>
-                            <input type="text" id="editTeamName" value="${team.name}" class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">팀장</label>
-                            <input type="text" id="editTeamLeader" value="${team.leader}" class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
-                        </div>
-                    </div>
-                    <div class="flex space-x-3 mt-6">
-                        <button type="button" onclick="closeEditModal()" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
-                            취소
-                        </button>
-                        <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                            저장
-                        </button>
-                    </div>
-                </form>
-            `;
-            document.getElementById('editModal').classList.remove('hidden');
-            document.getElementById('editModal').classList.add('flex');
-        }
-
-        function editDepartment(code) {
-            const dept = organizationData.departments.find(d => d.code === code);
-            if (!dept) return;
-            
-            document.getElementById('editModalTitle').textContent = '부서 편집';
-            document.getElementById('editModalContent').innerHTML = `
-                <form onsubmit="updateDepartment(event, '${code}')">
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">소속 팀</label>
-                            <select id="editDeptTeamCode" class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
-                                ${organizationData.teams.map(team => 
-                                    `<option value="${team.code}" ${team.code === dept.teamCode ? 'selected' : ''}>${team.code} - ${team.name}</option>`
-                                ).join('')}
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">부서 코드</label>
-                            <input type="text" id="editDeptCode" value="${dept.code}" class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100" readonly>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">부서 이름</label>
-                            <input type="text" id="editDeptName" value="${dept.name}" class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">부서장</label>
-                            <input type="text" id="editDeptLeader" value="${dept.leader}" class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
-                        </div>
-                    </div>
-                    <div class="flex space-x-3 mt-6">
-                        <button type="button" onclick="closeEditModal()" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
-                            취소
-                        </button>
-                        <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                            저장
-                        </button>
-                    </div>
-                </form>
-            `;
-            document.getElementById('editModal').classList.remove('hidden');
-            document.getElementById('editModal').classList.add('flex');
-        }
-
-        function editItem(code) {
-            const item = organizationData.items.find(i => i.code === code);
-            if (!item) return;
-            
-            document.getElementById('editModalTitle').textContent = '항목 편집';
-            document.getElementById('editModalContent').innerHTML = `
-                <form onsubmit="updateItem(event, '${code}')">
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">소속 부서</label>
-                            <select id="editItemDeptCode" class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
-                                ${organizationData.departments.map(dept => {
-                                    const team = organizationData.teams.find(t => t.code === dept.teamCode);
-                                    return `<option value="${dept.code}" ${dept.code === item.deptCode ? 'selected' : ''}>${dept.code} - ${dept.name} (${team ? team.name : ''})</option>`;
-                                }).join('')}
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">항목 코드</label>
-                            <input type="text" id="editItemCode" value="${item.code}" class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100" readonly>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">항목 이름</label>
-                            <input type="text" id="editItemName" value="${item.name}" class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">예산</label>
-                            <input type="number" step="0.01" id="editItemBudget" value="${item.budget}" class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">현재 지출</label>
-                            <input type="text" value="${formatCurrency(item.spent)}" class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100" readonly>
-                        </div>
-                    </div>
-                    <div class="flex space-x-3 mt-6">
-                        <button type="button" onclick="closeEditModal()" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
-                            취소
-                        </button>
-                        <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                            저장
-                        </button>
-                    </div>
-                </form>
-            `;
-            document.getElementById('editModal').classList.remove('hidden');
-            document.getElementById('editModal').classList.add('flex');
-        }
-
-        function updateTeam(event, code) {
-            event.preventDefault();
-            const team = organizationData.teams.find(t => t.code === code);
-            if (team) {
-                team.name = document.getElementById('editTeamName').value;
-                team.leader = document.getElementById('editTeamLeader').value;
-                
-                // 해당 팀 사용자 이름도 업데이트
-                const user = organizationData.users.find(u => u.teamCode === code);
-                if (user) {
-                    user.name = team.name;
-                }
-                
-                saveData();
-                updateSettingsContent();
-                populateSelects();
-                closeEditModal();
-                alert('팀 정보가 성공적으로 수정되었습니다.');
-            }
-        }
-
-        function updateDepartment(event, code) {
-            event.preventDefault();
-            const dept = organizationData.departments.find(d => d.code === code);
-            if (dept) {
-                dept.teamCode = document.getElementById('editDeptTeamCode').value;
-                dept.name = document.getElementById('editDeptName').value;
-                dept.leader = document.getElementById('editDeptLeader').value;
-                
-                saveData();
-                updateSettingsContent();
-                populateSelects();
-                closeEditModal();
-                alert('부서 정보가 성공적으로 수정되었습니다.');
-            }
-        }
-
-        function updateItem(event, code) {
-            event.preventDefault();
-            const item = organizationData.items.find(i => i.code === code);
-            if (item) {
-                item.deptCode = document.getElementById('editItemDeptCode').value;
-                item.name = document.getElementById('editItemName').value;
-                item.budget = parseFloat(document.getElementById('editItemBudget').value);
-                
-                saveData();
-                updateSettingsContent();
-                updateDashboard();
-                populateSelects();
-                closeEditModal();
-                alert('항목 정보가 성공적으로 수정되었습니다.');
-            }
-        }
-
-        function closeEditModal() {
-            document.getElementById('editModal').classList.add('hidden');
-            document.getElementById('editModal').classList.remove('flex');
-        }
-
-        // 삭제 확인 모달 관련 함수들
-        function showDeleteConfirmation(type, code, callback) {
-            document.getElementById('deleteMessage').textContent = `${type} "${code}"을(를) 정말로 삭제하시겠습니까?`;
-            deleteCallback = callback;
-            document.getElementById('deleteModal').classList.remove('hidden');
-            document.getElementById('deleteModal').classList.add('flex');
-            
-            // 확인 버튼에 이벤트 리스너 추가
-            document.getElementById('confirmDeleteBtn').onclick = function() {
-                if (deleteCallback) {
-                    deleteCallback();
-                }
-            };
-        }
-
-        function closeDeleteModal() {
-            document.getElementById('deleteModal').classList.add('hidden');
-            document.getElementById('deleteModal').classList.remove('flex');
-            deleteCallback = null;
-        }
-
-        // 삭제 함수들
-        function deleteTeam(code) {
-            console.log('팀 삭제 시도:', code);
-            
-            try {
-                // 관련 데이터 삭제
-                const relatedDepts = organizationData.departments.filter(d => d.teamCode === code);
-                const deptCodes = relatedDepts.map(d => d.code);
-                
-                organizationData.items = organizationData.items.filter(i => !deptCodes.includes(i.deptCode));
-                organizationData.departments = organizationData.departments.filter(d => d.teamCode !== code);
-                organizationData.expenses = organizationData.expenses.filter(e => e.teamCode !== code);
-                organizationData.users = organizationData.users.filter(u => u.teamCode !== code || u.id === 'admin');
-                organizationData.teams = organizationData.teams.filter(t => t.code !== code);
-                
-                saveData();
-                updateSettingsContent();
-                updateDashboard();
-                populateSelects();
-                closeDeleteModal();
-                
-                alert('팀과 관련된 모든 데이터가 성공적으로 삭제되었습니다.');
-            } catch (error) {
-                console.error('팀 삭제 중 오류:', error);
-                alert('팀 삭제 중 오류가 발생했습니다: ' + error.message);
-            }
-        }
-
-        function deleteDepartment(code) {
-            console.log('부서 삭제 시도:', code);
-            
-            try {
-                organizationData.items = organizationData.items.filter(i => i.deptCode !== code);
-                organizationData.expenses = organizationData.expenses.filter(e => e.deptCode !== code);
-                organizationData.departments = organizationData.departments.filter(d => d.code !== code);
-                
-                saveData();
-                updateSettingsContent();
-                updateDashboard();
-                populateSelects();
-                closeDeleteModal();
-                
-                alert('부서와 관련된 모든 데이터가 성공적으로 삭제되었습니다.');
-            } catch (error) {
-                console.error('부서 삭제 중 오류:', error);
-                alert('부서 삭제 중 오류가 발생했습니다: ' + error.message);
-            }
-        }
-
-        function deleteItem(code) {
-            console.log('항목 삭제 시도:', code);
-            
-            try {
-                organizationData.expenses = organizationData.expenses.filter(e => e.itemCode !== code);
-                organizationData.items = organizationData.items.filter(i => i.code !== code);
-                
-                saveData();
-                updateSettingsContent();
-                updateDashboard();
-                populateSelects();
-                closeDeleteModal();
-                
-                alert('항목과 관련된 모든 데이터가 성공적으로 삭제되었습니다.');
-            } catch (error) {
-                console.error('항목 삭제 중 오류:', error);
-                alert('항목 삭제 중 오류가 발생했습니다: ' + error.message);
-            }
-        }
-
-        // 시스템 데이터 내보내기
-        function exportSystemData() {
-            const dataStr = JSON.stringify(organizationData, null, 2);
-            const dataBlob = new Blob([dataStr], { type: 'application/json' });
-            const url = URL.createObjectURL(dataBlob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `NLOC_BUDGET_EXPENSE_${new Date().toISOString().split('T')[0]}.json`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-            alert('시스템 데이터가 성공적으로 내보내졌습니다.');
-        }
-
-        // 시스템 데이터 가져오기
-        function importSystemData(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const importedData = JSON.parse(e.target.result);
-                    
-                    // 데이터 유효성 검사
-                    if (!importedData.teams || !importedData.departments || !importedData.items) {
-                        alert('올바르지 않은 데이터 파일입니다.');
-                        return;
-                    }
-                    
-                    if (confirm('현재 데이터를 모두 교체하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
-                        organizationData = importedData;
-                        saveData();
-                        alert('데이터가 성공적으로 가져와졌습니다. 페이지를 새로고침합니다.');
-                        location.reload();
-                    }
-                } catch (error) {
-                    alert('파일을 읽는 중 오류가 발생했습니다: ' + error.message);
-                }
-            };
-            reader.readAsText(file);
-            
-            // 파일 입력 초기화
-            event.target.value = '';
-        }
-
-        // 초기화
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeData();
-        });
-    </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96b29a35314a69b0',t:'MTc1NDUyNTk2Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+  <script src="./app.js"></script>
+</body>
 </html>
